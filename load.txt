@@ -1,4 +1,30 @@
-sudo apt update && sudo apt install tar tor curl python3 python3-scapy network-manager &&
-git clone https://github.com/omer-dogan/kali-whoami
-&& cd kali-whoami
-&& sudo make install
+#!/bin/bash
+
+# Usage: ./subdomain_hunting.sh target_domain.com
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 target_domain.com"
+    exit 1
+fi
+
+target_domain="$1"
+wordlist="subdomains.txt"  # Update this with the path to your wordlist file
+
+if [ ! -f "$wordlist" ]; then
+    echo "Wordlist file not found: $wordlist"
+    exit 1
+fi
+
+echo "Starting subdomain enumeration for $target_domain..."
+
+# Loop through each word in the wordlist
+while IFS= read -r subdomain; do
+    full_domain="${subdomain}.${target_domain}"
+    status_code=$(curl -o /dev/null -s -w "%{http_code}" "http://${full_domain}")
+
+    if [ "$status_code" -eq 200 ]; then
+        echo "Subdomain found: ${full_domain}"
+    fi
+done < "$wordlist"
+
+echo "Subdomain enumeration completed."
